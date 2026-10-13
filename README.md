@@ -1,3 +1,6 @@
+Status: Documenting/planning rules of the game itself! Brainstorming functionality ideas.
+
+
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=542440024)
 
 # Javascript Discord Welcome MemeBot with GitHub Codespaces
