@@ -19,7 +19,3 @@ We are currently setting up our GitHub repository, Kanban board, and Discord tes
 Each team member has a personal GitHub fork and Discord testing server. Features will be developed individually, tracked through GitHub Issues and the Kanban board, and integrated into the group repository using pull requests.
 
 ## Team Name: Word Wizards
-
-## Security
-
-Bot credentials and Discord tokens must never be committed to GitHub. Local secrets will be stored in environment variables or an ignored `.env` file.
