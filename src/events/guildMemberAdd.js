@@ -25,8 +25,7 @@ const getWelcomeMessage = (userId) => {
   */
   return {
     content: `Welcome ${userMention(userId)},
-    Hope you have great time here!
-  `,
+    The FitnessGram Pacer Test is a multistage aerobic capacity test that...`,
   };
 };
 
