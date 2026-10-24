@@ -53,6 +53,7 @@ const getMeme = async () => {
     TODO: change this function to return a different meme randomly everytime a new user joins.
   */
 
+    /*
     randomNum = Math.floor(Math.random() * 3);
     let memeUrl = MEME_URL;
     if (randomNum === 1) {
@@ -61,7 +62,8 @@ const getMeme = async () => {
       memeUrl = "https://www.reddit.com/media?url=https%3A%2F%2Fcf.preview.redd.it%2Ffavorite-ace-combat-8-meme-v0-dsel90aorgvh1.jpeg%3Fwidth%3D1200%26format%3Dpjpg%26auto%3Dwebp%26s%3Dd4939a436cec6dd718445951388ed8c990ab0a9a";
     }
     return new EmbedBuilder().setImage(memeUrl);
-  //return new EmbedBuilder().setImage(MEME_URL);
+    */
+  return new EmbedBuilder().setImage(MEME_URL);
 };
 
 export default event;
