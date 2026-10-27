@@ -1,6 +1,5 @@
 import path from "path";
 import { startGame } from "../game/start";
-import { attemptsLeft, STATUS } from "../game/game";
 import { createGameStore } from "../game/store";
 
 export async function handleStart(interaction, client) {
@@ -14,16 +13,8 @@ export async function handleStart(interaction, client) {
         process.env.TECHDLE_GAME_STORE || path.join(process.cwd(), "data", "techdle-games.json")
       );
     }
-    const result = startGame(interaction.user.id, client.techdleGames);
-    const { game } = result;
-    let content;
-    if (game.status !== STATUS.PLAYING) {
-      content = `Today's Techdle is already finished (${game.status}). A new puzzle unlocks at 00:00 UTC.`;
-    } else if (!result.created) {
-      content = `Your Techdle game is already active. You have ${attemptsLeft(game)} of 6 attempts left. Your progress has been kept.`;
-    } else {
-      content = "Techdle started! Find today's five-letter tech word in 6 attempts. Everyone gets the same daily word; the puzzle changes at 00:00 UTC.\nGuess submission is coming in the next command integration.";
-    }
+    startGame(interaction.user.id, client.techdleGames);
+    const content = "Techdle started! Guess the five-letter tech word in 6 attempts. Every /techdle starts a new game and replaces your previous game.\nGuess submission is coming in the next command integration.";
     await interaction.editReply({ content });
   } catch (error) {
     console.error("Techdle start failed:", error.message);

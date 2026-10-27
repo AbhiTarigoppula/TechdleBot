@@ -9,7 +9,7 @@ async function register() {
   }
   const command = new SlashCommandBuilder()
     .setName("techdle")
-    .setDescription("Start or resume today's Techdle puzzle");
+    .setDescription("Start a new Techdle game with a random tech word");
   const rest = new REST({ version: "10" }).setToken(TOKEN);
   await rest.post(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
     body: command.toJSON(),

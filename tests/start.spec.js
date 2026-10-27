@@ -4,45 +4,64 @@ import os from "os";
 import path from "path";
 import { startGame } from "../src/game/start";
 import { createGameStore } from "../src/game/store";
-import { getDailyWord } from "../src/game/words";
+import { ANSWERS } from "../src/game/words";
+import { formatFeedback } from "../src/game/feedback";
 import { submitGuess } from "../src/game/game";
 import { handleStart } from "../src/events/interactionCreate";
 
 describe("Techdle start", () => {
-  const date = new Date("2026-10-27T12:00:00Z");
-  it("creates today's tech puzzle with six attempts", () => {
-    const result = startGame("alice", new Map(), date);
-    expect(result.created).to.equal(true);
-    expect(result.game.answer).to.equal(getDailyWord(date));
+  it("chooses a tech answer with six fresh attempts", () => {
+    const result = startGame("alice", new Map(), () => 0);
+    expect(result.game.answer).to.equal(ANSWERS[0]);
     expect(result.game.guesses).to.have.length(0);
+    expect(result.game.status).to.equal("playing");
     expect(result.game.maxAttempts).to.equal(6);
   });
-  it("resumes progress and never replaces a completed game", () => {
-    const store = new Map();
-    const first = startGame("alice", store, date);
-    const won = submitGuess(first.game, first.game.answer).game;
-    store.set(first.key, won);
-    const again = startGame("alice", store, date);
-    expect(again.created).to.equal(false);
-    expect(again.game).to.equal(won);
-    expect(again.game.status).to.equal("won");
+  it("uses the picker rather than selecting a daily answer", () => {
+    const result = startGame("alice", new Map(), length => length - 1);
+    expect(result.game.answer).to.equal(ANSWERS[ANSWERS.length - 1]);
   });
-  it("separates players and permits a new game at UTC midnight", () => {
+  it("replaces an unfinished game with a different word and fresh attempts", () => {
     const store = new Map();
-    const first = startGame("alice", store, date);
-    expect(startGame("bob", store, date).created).to.equal(true);
-    expect(startGame("alice", store, new Date("2026-10-27T23:59:59Z")).key).to.equal(first.key);
-    expect(startGame("alice", store, new Date("2026-10-28T00:00:00Z")).created).to.equal(true);
+    const first = startGame("alice", store, () => 0);
+    store.set(first.key, submitGuess(first.game, "stack").game);
+    const next = startGame("alice", store, () => 0);
+    expect(next.key).to.equal(first.key);
+    expect(next.game.answer).not.to.equal(first.game.answer);
+    expect(next.game.guesses).to.have.length(0);
+    expect(next.game.status).to.equal("playing");
+    expect(store.size).to.equal(1);
   });
-  it("retains the game after reopening the store", () => {
+  it("allows new games after either a win or a loss", () => {
+    for (const status of ["won", "lost"]) {
+      const store = new Map();
+      const first = startGame("alice", store, () => 0);
+      store.set(first.key, { ...first.game, status });
+      const next = startGame("alice", store, () => 0);
+      expect(next.game.status).to.equal("playing");
+      expect(next.game.answer).not.to.equal(first.game.answer);
+    }
+  });
+  it("keeps different players' active games separate", () => {
+    const store = new Map();
+    const bob = startGame("bob", store, () => 0).game;
+    startGame("alice", store);
+    startGame("alice", store);
+    expect(store.get("bob")).to.equal(bob);
+  });
+  it("persists the active game and can replace it after a restart", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "techdle-"));
     try {
       const filename = path.join(dir, "games.json");
-      startGame("alice", createGameStore(filename), date);
-      expect(startGame("alice", createGameStore(filename), date).created).to.equal(false);
+      const first = startGame("alice", createGameStore(filename), () => 0);
+      const reopened = createGameStore(filename);
+      expect(reopened.get("alice")).to.deep.equal(first.game);
+      const next = startGame("alice", reopened, () => 0);
+      expect(next.game.answer).not.to.equal(first.game.answer);
+      expect(createGameStore(filename).get("alice")).to.deep.equal(next.game);
     } finally { fs.rmSync(dir, { recursive: true, force: true }); }
   });
-  it("handles /techdle privately without revealing the answer", async () => {
+  it("starts a fresh game on every /techdle and keeps the answer private", async () => {
     const replies = [];
     const client = { techdleGames: new Map() };
     const interaction = {
@@ -52,10 +71,42 @@ describe("Techdle start", () => {
       editReply: async value => replies.push(value),
     };
     await handleStart(interaction, client);
-    expect(replies[0].content).to.include("Techdle started!");
-    expect(replies[0].content).not.to.include(getDailyWord());
+    const first = client.techdleGames.get("alice");
+    expect(replies[0].content).not.to.include(first.answer);
     await handleStart(interaction, client);
-    expect(replies[1].content).to.include("already active");
+    const second = client.techdleGames.get("alice");
+    expect(second.answer).not.to.equal(first.answer);
+    expect(second.guesses).to.have.length(0);
+    expect(replies[1].content).to.include("Techdle started!");
+    expect(replies[1].content).not.to.include(second.answer);
+  });
+  it("integrates stored games with the team's validation, feedback and win/loss engine", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "techdle-engine-"));
+    try {
+      const filename = path.join(dir, "games.json");
+      const store = createGameStore(filename);
+      startGame("alice", store, () => 0); // array
+      const initial = store.get("alice");
+      expect(submitGuess(initial, "zz").ok).to.equal(false);
+      expect(store.get("alice").guesses).to.have.length(0);
+      const wrong = ANSWERS.find(word => word !== initial.answer);
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const result = submitGuess(store.get("alice"), wrong);
+        expect(result.ok).to.equal(true);
+        expect(result.feedback).to.have.length(5);
+        expect(formatFeedback(result.feedback)).to.be.a("string");
+        store.set("alice", result.game);
+      }
+      const reloaded = createGameStore(filename);
+      expect(reloaded.get("alice").status).to.equal("lost");
+      expect(submitGuess(reloaded.get("alice"), initial.answer).ok).to.equal(false);
+      const fresh = startGame("alice", reloaded, () => 0).game;
+      const win = submitGuess(fresh, fresh.answer);
+      expect(win.game.status).to.equal("won");
+      expect(formatFeedback(win.feedback)).to.equal("🟩🟩🟩🟩🟩");
+      reloaded.set("alice", win.game);
+      expect(createGameStore(filename).get("alice").status).to.equal("won");
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
   });
   it("ignores unrelated commands and other interaction types", async () => {
     await handleStart({ isChatInputCommand: () => false }, {});
