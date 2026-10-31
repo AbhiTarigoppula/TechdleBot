@@ -1,4 +1,4 @@
-// Word lists and daily word selection (issue #6).
+// Word lists: the answer pool and every word accepted as a guess.
 
 export const WORD_LENGTH = 5;
 
@@ -41,24 +41,3 @@ export const ALLOWED_GUESSES = new Set([
   ...GENERAL_WORDS,
   ...EXTRA_GUESSES,
 ]);
-
-// Day 0 of the daily rotation. Fixed so every server gets the same word.
-const EPOCH_UTC = Date.UTC(2026, 0, 1);
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-// Whole UTC days since EPOCH_UTC, so the word rolls over at 00:00 UTC.
-export function dayNumber(date = new Date()) {
-  const utcMidnight = Date.UTC(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate()
-  );
-  return Math.floor((utcMidnight - EPOCH_UTC) / MS_PER_DAY);
-}
-
-// The word of the day: deterministic for a given UTC date, same for everyone.
-export function getDailyWord(date = new Date(), answers = ANSWERS) {
-  const n = dayNumber(date);
-  const index = ((n % answers.length) + answers.length) % answers.length;
-  return answers[index];
-}
