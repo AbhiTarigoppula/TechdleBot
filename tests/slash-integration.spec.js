@@ -72,7 +72,7 @@ describe("Techdle slash integration", () => {
   it("rejects invalid guesses without changing memory or disk", async () => {
     await start();
     const before = fs.readFileSync(filename, "utf8");
-    for (const word of ["", "a", "abcdef", "ar!ay", "zzzzz"]) {
+    for (const word of ["", "a", "abcdef", "ar!ay"]) {
       const reply = await send("guess", word);
       expect(reply).not.to.include("Guess 1/");
       expect(client.techdleGames.get("alice").guesses).to.have.length(0);
@@ -85,6 +85,14 @@ describe("Techdle slash integration", () => {
     const reply = await send("guess", "crane");
     expect(reply).to.equal("⬛🟩🟨⬛⬛ (Guess 1/6)\n5 attempts left. Use /guess to guess again.");
     expect(reply.toLowerCase()).not.to.include("array");
+  });
+  it("scores unlisted guesses, saves them and counts their attempts", async () => {
+    client.techdleGames = createGameStore(filename);
+    startGame("alice", client.techdleGames, () => 0); // array
+    expect(await send("guess", "zzzzz")).to.equal("⬛⬛⬛⬛⬛ (Guess 1/6)\n5 attempts left. Use /guess to guess again.");
+    expect(await send("guess", "razzz")).to.equal("🟨🟨⬛⬛⬛ (Guess 2/6)\n4 attempts left. Use /guess to guess again.");
+    expect(await send("guess", "aaaaa")).to.equal("🟩⬛⬛🟩⬛ (Guess 3/6)\n3 attempts left. Use /guess to guess again.");
+    expect(createGameStore(filename).get("alice").guesses.map(g => g.guess)).to.deep.equal(["zzzzz", "razzz", "aaaaa"]);
   });
   it("loses after six valid wrong guesses and rejects a seventh", async () => {
     const game = await start();
