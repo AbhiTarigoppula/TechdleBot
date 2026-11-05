@@ -1,24 +1,37 @@
-# Techdle slash commands
+## Slash-Command Game
 
-This section explains my `/techdle` and `/guess` feature: how the player, bot, word list, and saved game file work together.
+A player starts a fresh Techdle game with `/techdle`. The bot saves that game using the player’s Discord ID. When the player submits `/guess {word}`, the bot loads that player’s game, checks and scores the guess, saves accepted guesses, and privately replies with the colored feedback and game result.
 
-## Data flow diagram
+### Command flow
+
+```mermaid
+flowchart TD
+    Player[Player in Discord] --> StartCommand["/techdle"]
+    StartCommand --> StartGame[Create fresh game with six attempts]
+    StartGame --> TechAnswer[Choose a tech answer]
+    TechAnswer --> SaveNew[Save game under player's Discord ID]
+    SaveNew --> StartReply[Privately confirm game started]
+
+    Player --> GuessCommand["/guess {word}"]
+    GuessCommand --> LoadGame[Load game using player's Discord ID]
+    LoadGame --> Submit[Check and score the guess]
+    Submit --> Accepted{Guess accepted?}
+    Accepted -->|No| Error[Privately show error]
+    Accepted -->|Yes| SaveGuess[Save updated game]
+    SaveGuess --> Feedback[Privately show colored squares and game result]
+```
+
+### Saved game data
+
+Each Discord user ID maps to that player's current game. Starting `/techdle` replaces that player's game and clears their guess history.
 
 ```mermaid
 flowchart LR
-    Player[Player] -->|/techdle or /guess word| Bot[Techdle bot]
-    Words[(Tech word list)] -->|answer for a new game| Bot
-    Bot <-->|game saved by Discord user ID| Store[(Saved game file)]
-    Bot -->|private feedback| Player
+    UserID["Discord user ID"] --> Game["Saved game"]
+    Game --> Answer["answer"]
+    Game --> Attempts["maxAttempts"]
+    Game --> Guesses["guesses and letter feedback"]
+    Game --> Status["playing, won, or lost"]
 ```
 
-`/techdle` selects a tech answer different from that user's last answer, starts a new six-attempt game, and saves it. `/guess` loads that user's game, scores the guess, and saves accepted guesses. Inputs are trimmed and lowercased; any five letters are scored without a dictionary check. Replies are private, and each Discord user ID has a separate game.
-
-## Main code files
-
-- `src/events/interactionCreate.js` handles the slash commands and replies privately.
-- `src/game/` contains the game rules and letter feedback.
-- `src/game/store.js` saves games in a JSON file.
-- `src/game/words.js` supplies the possible tech answers.
-
-To add to the slash-command game, route the command in `interactionCreate.js` and put its game rules in `src/game/`.
+The slash-command handler is in `src/events/interactionCreate.js`. `src/game/start.js` creates fresh games, `src/game/game.js` processes guesses and determines game status, `src/game/feedback.js` scores and formats the colored squares, and `src/game/store.js` saves player games in `data/techdle-games.json`.
