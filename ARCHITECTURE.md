@@ -1,39 +1,17 @@
-# Techdle Bot Architecture
+# My Techdle feature
 
-## Starting and saving a player's game
-
-Techdle keeps one slash-command game per Discord user ID. When a player runs `/techdle`, the bot chooses a random five-letter tech answer, excluding that player's previous answer. The new game starts with six attempts, an empty guess history, and a status of `playing`.
-
-Starting a game replaces only that player's entry. For example, if Abhi starts again while Mario is halfway through a game, Abhi gets a new word and Mario keeps his guesses. The bot uses the same Discord user ID to find the right game when either player runs `/guess`.
-
-### Data flow diagram
-
-The arrows show what information moves between Discord, the game code, and storage.
+This diagram shows how my `/techdle` and `/guess` commands use the game code and saved game file.
 
 ```mermaid
 flowchart TD
-    D[Discord player]
-    H([Handle slash command])
-    S([Start a game])
-    G([Evaluate a guess])
-    W[(Tech answer list)]
-    P[(Player game store)]
-
-    D -->|Command, user ID, and optional guess| H
-    H -->|Start request with user ID| S
-    W -->|Possible answers| S
-    P -->|Previous game for this user| S
-    S -->|Fresh game keyed by user ID| P
-    S -->|Start confirmed| H
-    P -->|Current game for this user| H
-    H -->|Current game and submitted word| G
-    G -->|Updated game and feedback, or error| H
-    H -->|Updated game after an accepted guess| P
-    H -->|Private confirmation, feedback, or error| D
+    A[Player runs /techdle] --> B[Bot picks a tech word different from the last one and starts six tries]
+    B --> C[Save game under player's Discord ID]
+    D[Player runs /guess word] --> E[Load that player's saved game]
+    C --> E
+    E --> F[For a valid guess, score it and save the update]
+    F --> G[Send private colors and game result]
 ```
 
-### How the code fits together
+Each player has one current game. Starting `/techdle` again replaces that player's game. Guesses must be five letters; any five-letter guess is scored, without checking a word list. Invalid guesses use no attempt.
 
-The [Discord handler](src/events/interactionCreate.js) reads the user ID from the interaction. For `/techdle`, it calls [startGame](src/game/start.js), which saves the new game before the bot confirms it. For `/guess`, the handler loads the game for that same ID and passes it and the submitted word to [submitGuess](src/game/game.js). It saves an accepted guess before replying with the colored squares. A rejected guess uses no attempt.
-
-The [game store](src/game/store.js) loads saved games the first time the bot needs them. Its default file is `data/techdle-games.json`. Each update writes a temporary file and renames it over the saved file. Players can resume after a restart as long as that file is retained. The store is designed for one running bot process because each process holds its own copy of the games in memory.
+**Code:** `src/events/interactionCreate.js` handles commands and replies; `src/game/` contains the rules and feedback; `src/game/store.js` saves games; and `src/game/words.js` provides tech answers.
