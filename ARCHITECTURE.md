@@ -2,8 +2,6 @@
 
 This section explains my `/techdle` and `/guess` feature: how Discord commands reach the game code, how a player's game is saved, and where teammates can extend it.
 
-![Simple diagram of the Techdle slash-command feature](techdle-slash-architecture.png)
-
 ## System architecture: data flow
 
 The interaction handler connects Discord to the game rules and saved game data. Replies are private to the player.
@@ -45,10 +43,4 @@ flowchart TD
     J --> K[Save game and send private feedback]
 ```
 
-The current validator accepts any five letters from `a` to `z`; it does not check a dictionary. Accepted guesses use one of the six attempts. Starting `/techdle` again replaces that player's current game. Other players' games stay separate.
-
-## Extending this feature
-
-To add a slash command, define it in `src/commands/techdle.js` and route it in `src/events/interactionCreate.js`. Put game rules in `src/game/`, and reuse the saved game store with the Discord user ID so each player's state stays separate.
-
-The JSON store defaults to `data/techdle-games.json` and can be moved with `TECHDLE_GAME_STORE`. It is designed for one running bot process; if the team later runs multiple bot instances, game data should move to shared storage.
+The current validator accepts any five letters from `a` to `z`. Accepted guesses use one of the six attempts. Starting `/techdle` again replaces that player's current game. Other players games stay separate.
