@@ -1,37 +1,28 @@
 # TechdleBot Use Case Diagram
 
 ```mermaid
-flowchart LR
-    Player["🧍 Player"]
 
-    subgraph Bot["TechdleBot"]
-        direction LR
+usecase-beta
+direction TB
 
-        Start(["Start or Reset Game<br/>/techdle"])
-        Guess(["Submit Word Guess<br/>/guess"])
+actor Player
 
-        Generate(["Generate New<br/>Five-Letter Tech Word"])
-        Validate(["Validate Guess"])
-        Feedback(["Display Letter Feedback"])
-        Result(["Display Win / Loss Result"])
-    end
+systemBoundary "TechdleBot"
+  StartGame("Start or reset game with /techdle")
+  SubmitGuess("Submit a word guess with /guess")
+  GenerateWord("Generate a random five-letter tech word")
+  ValidateGuess("Validate five-letter guess")
+  Feedback("Receive letter feedback")
+  GameResult("Receive win or loss result")
+end
 
-    Player --- Start
-    Player --- Guess
+Player --> StartGame
+Player --> SubmitGuess
 
-    Start -.->|«include»| Generate
-    Guess -.->|«include»| Validate
+StartGame ..> GenerateWord : include
+SubmitGuess ..> ValidateGuess : include
+GameResult ..> SubmitGuess : extend
 
-    Validate -.->|valid guess| Feedback
-    Feedback -.->|game ends| Result
-
-    style Bot fill:none,stroke:#64748b,stroke-width:2px
-    style Start fill:#dbeafe,stroke:#4778ad,color:#17365d
-    style Guess fill:#dbeafe,stroke:#4778ad,color:#17365d
-    style Generate fill:#f1f5f9,stroke:#64748b,color:#334155
-    style Validate fill:#f1f5f9,stroke:#64748b,color:#334155
-    style Feedback fill:#f1f5f9,stroke:#64748b,color:#334155
-    style Result fill:#f1f5f9,stroke:#64748b,color:#334155
 ```
 
 
