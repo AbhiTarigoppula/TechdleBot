@@ -17,8 +17,8 @@ end
 Player --> StartGame
 Player --> SubmitGuess
 
-StartGame ..> GenerateWord : include
-SubmitGuess ..> ValidateGuess : include
+StartGame ..> : include GenerateWord
+SubmitGuess ..> : include ValidateGuess
 ```
 
 The command definitions are in `src/commands/techdle.js`; `src/events/interactionCreate.js` handles the commands; and `src/game/` contains the game rules and storage.
