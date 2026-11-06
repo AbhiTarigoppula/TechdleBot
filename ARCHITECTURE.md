@@ -2,21 +2,23 @@
 
 ```mermaid
 usecase-beta
-direction TB
+direction LR
 
 actor Player
 
-systemBoundary "Techdle slash-command feature"
-  StartGame("Start or restart a game with /techdle")
+systemBoundary "Techdle slash-command game"
+  StartGame("Start or restart with /techdle")
   SubmitGuess("Submit a guess with /guess")
-  SeeResult("Receive colored feedback, attempts left, or win/loss result")
-  InvalidGuess("Get an error when the guess is not five letters")
+  CheckLength("Check that the guess has five letters")
+  ShowFeedback("See colored feedback, attempts left, or win/loss")
+  ShowError("See an error; use no attempt")
 end
 
 Player --> StartGame
 Player --> SubmitGuess
-SubmitGuess ..> : include SeeResult
-InvalidGuess ..> : extend SubmitGuess
+SubmitGuess ..> : include CheckLength
+ShowFeedback ..> : extend SubmitGuess
+ShowError ..> : extend SubmitGuess
 ```
 
 The command definitions are in `src/commands/techdle.js`; `src/events/interactionCreate.js` handles the commands; and `src/game/` contains the game rules and storage.
