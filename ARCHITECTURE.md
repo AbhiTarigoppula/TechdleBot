@@ -1,6 +1,6 @@
 # Abhi - Use Case Diagram
 
-```
+```mermaid
 usecase-beta
 direction TB
 
