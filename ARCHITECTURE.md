@@ -1,5 +1,24 @@
 
-## Abhi - Activity Diagram
+# Abhi - Use Case Diagram
+
+This use case diagram shows how a player interacts with TechdleBot through its two slash commands. Players can start or reset a game with `/techdle` and submit guesses with `/guess`. A game must be started before a player can submit a guess.
+
+```mermaid
+usecase-beta
+direction TB
+
+actor Player
+
+systemBoundary "TechdleBot"
+  StartGame("Start or reset game with /techdle")
+  SubmitGuess("Submit a five-letter guess with /guess")
+end
+
+Player --> StartGame
+Player --> SubmitGuess
+```
+
+# Abhi - Activity Diagram
 
 This activity diagram shows how TechdleBot handles its two slash commands. The `/techdle` command starts a new game or resets an existing one with a new word. The `/guess` command checks whether the player has an active game and submitted a valid five-letter guess. The bot then provides feedback and either displays the remaining attempts or ends the game with a win or loss.
 
