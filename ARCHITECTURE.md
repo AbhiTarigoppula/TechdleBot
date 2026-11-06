@@ -1,76 +1,29 @@
 
-# Abhi - Use Case Diagram
+## Abhi - Activity Diagram
 
-The use case diagram shows how a Discord player interacts with TechdleBot through its two slash commands. Players can start or reset a game with `/techdle` and submit guesses with `/guess`. A game must exist before a player can submit a guess.
-
-```mermaid
-usecase-beta
-direction TB
-
-actor Player
-
-systemBoundary "TechdleBot"
-  StartGame("Start or reset game with /techdle")
-  SubmitGuess("Submit a five-letter guess with /guess")
-end
-
-Player --> StartGame
-Player --> SubmitGuess
-```
-
-## Techdle Gameplay Activity Diagram
-
-This activity diagram shows how TechdleBot processes the two slash commands. The bot stores one game per Discord user, checks guesses, and returns feedback until the player wins or uses all six attempts.
+This activity diagram shows how TechdleBot handles its two slash commands. The `/techdle` command starts a new game or resets an existing one with a new word. The `/guess` command checks whether the player has an active game and submitted a valid five-letter guess. The bot then provides feedback and either displays the remaining attempts or ends the game with a win or loss.
 
 ```mermaid
 flowchart TD
-    A([Player enters slash command])
-    B{Which command?}
+    A((Start)) --> B(Enter slash command)
+    B --> C{Command?}
 
-    C[Start new game]
-    D[Generate random tech word]
-    E[Save game for player]
-    F[Confirm game started]
+    C -->|/techdle| D(Start or reset game)
+    D --> E(Save new tech word)
+    E --> Z((End))
 
-    G{Game exists?}
-    H[Ask player to start a game]
-    I{Game still active?}
-    J[Show game already finished]
-    K{Guess has five letters?}
-    L[Show invalid guess error]
-    M[Score guess and save attempt]
-    N[Display letter feedback]
-    O{Correct guess?}
-    P[Display win result]
-    Q{Six attempts used?}
-    R[Display loss result]
-    S[Show remaining attempts]
-    T([Wait for next command])
+    C -->|/guess| F{Active game?}
+    F -->|No| G(Show error)
+    G --> Z
 
-    A --> B
-    B -->|/techdle| C
-    C --> D --> E --> F --> T
+    F -->|Yes| H{Valid guess?}
+    H -->|No| G
+    H -->|Yes| I(Score guess and show feedback)
 
-    B -->|/guess| G
-    G -->|No| H --> T
-    G -->|Yes| I
-    I -->|No| J --> T
-    I -->|Yes| K
-    K -->|No| L --> T
-    K -->|Yes| M --> N --> O
-    O -->|Yes| P --> T
-    O -->|No| Q
-    Q -->|Yes| R --> T
-    Q -->|No| S --> T
+    I --> J{Game over?}
+    J -->|Yes| K(Show win or loss)
+    J -->|No| L(Show attempts left)
+
+    K --> Z
+    L --> Z
 ```
-
-## Related Code
-
-- `src/commands/techdle.js` defines the `/techdle` and `/guess` slash commands.
-- `src/events/interactionCreate.js` processes player commands and sends Discord responses.
-- `src/game/start.js` creates new games and replaces existing games.
-- `src/game/game.js` tracks guesses, attempts, and win/loss status.
-- `src/game/validate.js` validates five-letter guesses.
-- `src/game/feedback.js` generates letter feedback.
-- `src/game/store.js` saves game state in a JSON file.
-- `src/game/words.js` provides the possible tech-word answers.
