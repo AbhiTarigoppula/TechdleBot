@@ -8,7 +8,7 @@ actor Player
 
 systemBoundary "Techdle slash-command feature"
   StartGame("Start or restart a game with /techdle")
-  SubmitGuess("Submit a five-letter guess with /guess")
+  SubmitGuess("Guess with /guess and receive feedback")
 end
 
 Player --> StartGame
