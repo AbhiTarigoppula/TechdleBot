@@ -1,6 +1,7 @@
 # Abhi - Use Case Diagram
 
-```usecase-beta
+```
+usecase-beta
 direction TB
 
 actor Player
