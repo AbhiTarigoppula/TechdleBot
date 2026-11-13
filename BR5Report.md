@@ -1,10 +1,10 @@
 ## Technical Debt and Code Smells
 
-I looked at the code for `/techdle` and `/guess`. The command handler in `src/events/interactionCreate.js` starts games, handles guesses, accesses saved games, and builds the replies. The game rules are in separate files, which keeps those parts easier to find.
+I looked at the code for `/techdle` and `/guess` commands. The command handler in `src/events/interactionCreate.js` and it starts games, handles guesses, accesses saved games, and builds the replies. The game rules are in separate files, which keeps those parts easier to find.
 
-I found one confusing leftover in `src/game/words.js`: it defines an `ALLOWED_GUESSES` list, but `src/game/validate.js` does not use that list. Right now, `/guess` accepts any five letters, even if the word is not in the list. That is the current behavior, but the unused list could confuse someone working on the game later.
+I found one confusing leftover in `src/game/words.js` which was an `ALLOWED_GUESSES` list, but `src/game/validate.js` does not use that list. Right now, `/guess` accepts any five letters, even if the word is not in the list. That is the current behavior, but the unused list could confuse someone working on the game later.
 
-`src/game/validate.js` also defines three error names that all return the same message: “you need 5 letters.” This works, but having separate names for the same message is unnecessary and could be simplified.
+`src/game/validate.js` also defines three error names that all return the same message of “you need 5 letters”. This works but having separate names for the same message is unnecessary and could be simplified.
 
 The game store in `src/game/store.js` uses a JSON file and is designed for one running bot process. That is reasonable for the current setup, but running multiple bot processes could cause them to have different copies of the saved games.
 
@@ -21,4 +21,4 @@ I checked what each slash-command file does and counted its imports from other p
 | `src/game/feedback.js` | Checks letters and creates colored feedback | 0 |
 | `src/game/validate.js` | Checks the guess format | 0 |
 
-Most game files have one clear job, so they are easy to understand separately. `interactionCreate.js` has the most connections because it coordinates Discord, the game rules, and saved games. That makes it the most connected part of the slash-command feature, but it also makes sense for it to act as the command handler. The game logic uses simple game data and a store with `get` and `set` methods, which helps keep it separate from Discord and the JSON file.
+Most game files have one clear job, so they are easy to understand separately. `interactionCreate.js` has the most connections because it coordinates Discord, the game rules, and saved games. That makes it the most connected part of the slash-command feature, but it also makes sense for it to act as the command handler. The game logic uses game data and a store with `get` and `set` methods, which helps keep it separate from Discord and the JSON file.
